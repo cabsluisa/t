@@ -8,7 +8,7 @@ package um.simulator.visualization;
  */
 public class SimPanelUpdater extends Thread {
     int pace;
-    
+
     /**
      * Constructor.
      * @param pace The time interval between updates, in milliseconds.
@@ -16,7 +16,7 @@ public class SimPanelUpdater extends Thread {
     public SimPanelUpdater(int pace) {
         this.pace = pace;
     }
-    
+
     /**
      * Update the GUI periodically.
      */

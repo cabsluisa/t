@@ -1,37 +1,34 @@
 package um.simulator.visualization;
 
 import java.awt.Color;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import um.simulator.core.communications.MulticastStatusReceiver;
-import um.simulator.core.communications.TCPClient;
+import um.simulator.communications.MulticastReceiver;
+import um.simulator.communications.TCPClient;
 import um.simulator.core.SimStatus;
 import um.simulator.reporting.ReportingPlayer;
 
 /**
  * This is the main class of the tool used to monitor the simulation status. It supports two modes: "Realtime" and "Playback".
- The "Realtime" mode gets the maps to display from the GlobalCoordinator through a TCP connection (using a TCPClient object),
- and the information about the status of each actor from the multicast channel (using a MulticastStatusReceiver object).
- The "Playback" mode gets all the information to display from a set of files generated previously
- through the Reporting function of the GlobalCoordinator.
+ * The "Realtime" mode gets the maps to display from the GlobalCoordinator through a TCP connection (using a TCPClient object),
+ * and the information about the status of each actor from the multicast channel (using a MulticastReceiver object).
+ * The "Playback" mode gets all the information to display from a set of files generated previously
+ * through the Reporting function of the GlobalCoordinator.
  * @author ajcmoreira
  * @version 2.2
  * @date 04.02.2016
  */
 public class SimScope extends javax.swing.JFrame {
-    private final String aboutText = "<html>BartUM Urban Networking Simulator<br>Version 2.3 - 15.10.2017<br>&#169 University of Minho</html>";
-    private final String welcomeMessageText = "<html><br><br><br><br><br><br>BartUM Urban Networking Simulator<br>Version 2.3 - 15.10.2017<br>University of Minho</html>";
+    private final String aboutText = "<html>BartUM Urban Networking Simulator<br>Version 2.2 - 04.02.2016<br>&#169 University of Minho</html>";
+    private final String welcomeMessageText = "<html><br><br><br><br><br><br>BartUM Urban Networking Simulator<br>Version 2.2 - 04.02.2016<br>University of Minho</html>";
     static TCPClient tcpLink;
     private final String globalCoordinatorIPaddress;
     private final int globalCoordinatorPort;
-    static MulticastStatusReceiver multicastReceiver;
+    static MulticastReceiver multicastReceiver;
     private final String multicastAddress;
     private final int multicastPort;
     public static boolean keepUpdating = true; //used to control whether the simPanel should be updated or not
@@ -42,9 +39,7 @@ public class SimScope extends javax.swing.JFrame {
     public static boolean pedestriansVisible = true;
     public static boolean tramsVisible = true;
     public static boolean othersVisible = true;
-    public static boolean busVisible = true;
-    public static boolean tlVisible = true;
-    
+
     /**
      * Creates a new SimScope, initializes the GUI, and reads the configuration parameters.
      * The GUI is started in the "Welcome" mode, waiting for the user to select the desired mode.
@@ -53,10 +48,10 @@ public class SimScope extends javax.swing.JFrame {
         //initialize the GUI
         getContentPane().setBackground(Color.white);
         initComponents(); //creates the GUI components (panels, buttons, etc.) and sets the layout
-        
+
         //set the GUI for the welcome screen, and wait for the user input
         startInterfaceInMode("welcome");
-        
+
         //load the configuration file and read the configuration parameters
         System.out.print("  1. Loading and reading the configuration parameters...");
         Properties prop = new Properties();
@@ -70,7 +65,7 @@ public class SimScope extends javax.swing.JFrame {
         }
 	globalCoordinatorIPaddress = prop.getProperty("GlobalCoordinator.IP");
 	globalCoordinatorPort = Integer.parseInt(prop.getProperty("GlobalCoordinator.port","7575"));
-        multicastAddress = prop.getProperty("Multicast.IP");        
+        multicastAddress = prop.getProperty("Multicast.IP");
 	multicastPort = Integer.parseInt(prop.getProperty("Multicast.port","7070"));
         System.out.println(" done.");
         new SimPanelUpdater(pace).start();
@@ -129,11 +124,8 @@ public class SimScope extends javax.swing.JFrame {
         exitFileMenuOption = new javax.swing.JMenuItem();
         viewMenu = new javax.swing.JMenu();
         mapsNodesViewMenuOption = new javax.swing.JMenuItem();
-        actorsIdViewMenuOption = new javax.swing.JMenuItem();
-        actorsLabelViewMenuOption1 = new javax.swing.JMenuItem();
+        actorsInfoViewMenuOption = new javax.swing.JMenuItem();
         cursorCoordsViewMenuOption = new javax.swing.JMenuItem();
-        busStopsViewMenuOption = new javax.swing.JMenuItem();
-        Tram_Stops = new javax.swing.JMenuItem();
         helpMenu = new javax.swing.JMenu();
         aboutHelpMenuOption = new javax.swing.JMenuItem();
 
@@ -187,20 +179,10 @@ public class SimScope extends javax.swing.JFrame {
         actorType5CheckBox.setBackground(new java.awt.Color(255, 255, 255));
         actorType5CheckBox.setSelected(true);
         actorType5CheckBox.setText("actorType5");
-        actorType5CheckBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                actorType5CheckBoxActionPerformed(evt);
-            }
-        });
 
         actorType6CheckBox.setBackground(new java.awt.Color(255, 255, 255));
         actorType6CheckBox.setSelected(true);
         actorType6CheckBox.setText("actorType6");
-        actorType6CheckBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                actorType6CheckBoxActionPerformed(evt);
-            }
-        });
 
         actorType7CheckBox.setBackground(new java.awt.Color(255, 255, 255));
         actorType7CheckBox.setSelected(true);
@@ -370,7 +352,7 @@ public class SimScope extends javax.swing.JFrame {
         generalControlPanelLayout.setVerticalGroup(
             generalControlPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, generalControlPanelLayout.createSequentialGroup()
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(7, Short.MAX_VALUE)
                 .add(realtimePauseResumeButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(snapshotButton)
@@ -501,21 +483,13 @@ public class SimScope extends javax.swing.JFrame {
         });
         viewMenu.add(mapsNodesViewMenuOption);
 
-        actorsIdViewMenuOption.setText("Actors id");
-        actorsIdViewMenuOption.addActionListener(new java.awt.event.ActionListener() {
+        actorsInfoViewMenuOption.setText("Actors info");
+        actorsInfoViewMenuOption.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                actorsIdViewMenuOptionActionPerformed(evt);
+                actorsInfoViewMenuOptionActionPerformed(evt);
             }
         });
-        viewMenu.add(actorsIdViewMenuOption);
-
-        actorsLabelViewMenuOption1.setText("Actors label");
-        actorsLabelViewMenuOption1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                actorsLabelViewMenuOption1ActionPerformed(evt);
-            }
-        });
-        viewMenu.add(actorsLabelViewMenuOption1);
+        viewMenu.add(actorsInfoViewMenuOption);
 
         cursorCoordsViewMenuOption.setText("Cursor coordinates");
         cursorCoordsViewMenuOption.addActionListener(new java.awt.event.ActionListener() {
@@ -524,22 +498,6 @@ public class SimScope extends javax.swing.JFrame {
             }
         });
         viewMenu.add(cursorCoordsViewMenuOption);
-
-        busStopsViewMenuOption.setText("Bus Stops");
-        busStopsViewMenuOption.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                busStopsViewMenuOptionActionPerformed(evt);
-            }
-        });
-        viewMenu.add(busStopsViewMenuOption);
-
-        Tram_Stops.setText("Tram Stops");
-        Tram_Stops.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                Tram_StopsActionPerformed(evt);
-            }
-        });
-        viewMenu.add(Tram_Stops);
 
         MenuBar.add(viewMenu);
 
@@ -605,7 +563,7 @@ public class SimScope extends javax.swing.JFrame {
 
 /**
  * Toggles the visibility of the actors of type Tram.
- * @param evt 
+ * @param evt
  */
     private void actorType3CheckBoxEvent(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorType3CheckBoxEvent
         tramsVisible = actorType3CheckBox.isSelected();
@@ -613,7 +571,7 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Toggles the visibility of the actors of type Car.
-     * @param evt 
+     * @param evt
      */
     private void actorType1CheckBoxEvent(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorType1CheckBoxEvent
         carsVisible = actorType1CheckBox.isSelected();
@@ -621,7 +579,7 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Toggle the visibility of the actors of type Pedestrian
-     * @param evt 
+     * @param evt
      */
     private void actorType2CheckBoxEvent(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorType2CheckBoxEvent
         pedestriansVisible = actorType2CheckBox.isSelected();
@@ -629,7 +587,7 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Toggles the visibility of the actors of type Others.
-     * @param evt 
+     * @param evt
      */
     private void actorType4CheckBoxEvent(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorType4CheckBoxEvent
         othersVisible = actorType4CheckBox.isSelected();
@@ -637,7 +595,7 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Toggles the visibility of the Maps' nodes.
-     * @param evt 
+     * @param evt
      */
     private void mapsNodesViewMenuOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mapsNodesViewMenuOptionActionPerformed
         simPanel.drawPoints = !simPanel.drawPoints;
@@ -645,7 +603,7 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Toggles the visibility of the cursor coordinates.
-     * @param evt 
+     * @param evt
      */
     private void cursorCoordsViewMenuOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cursorCoordsViewMenuOptionActionPerformed
         simPanel.drawCoordinates = !simPanel.drawCoordinates;
@@ -653,16 +611,16 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Toggles the visibility of the actors info (over the actors, on the map).
-     * @param evt 
+     * @param evt
      */
-    private void actorsIdViewMenuOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorsIdViewMenuOptionActionPerformed
+    private void actorsInfoViewMenuOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorsInfoViewMenuOptionActionPerformed
         simPanel.drawActorsInfo = !simPanel.drawActorsInfo;
-    }//GEN-LAST:event_actorsIdViewMenuOptionActionPerformed
+    }//GEN-LAST:event_actorsInfoViewMenuOptionActionPerformed
 
     /**
      * Pause the updating of the simulation on the screen, or resume it. In Realtime mode, the evolution of the simulation
      * between a pause and a resume is lost from the point of view of the monitoring.
-     * @param evt 
+     * @param evt
      */
     private void realtimePauseResumeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_realtimePauseResumeButtonActionPerformed
         if (keepUpdating) {
@@ -685,7 +643,7 @@ public class SimScope extends javax.swing.JFrame {
 
     /**
      * Shows the About information.
-     * @param evt 
+     * @param evt
      */
     private void aboutHelpMenuOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutHelpMenuOptionActionPerformed
         popupBox(aboutText, "BartUM");
@@ -737,31 +695,6 @@ public class SimScope extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_playbackPlayPauseButtonActionPerformed
 
-    private void actorType6CheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorType6CheckBoxActionPerformed
-        // TODO add your handling code here:
-        tlVisible=actorType6CheckBox.isSelected();
-    }//GEN-LAST:event_actorType6CheckBoxActionPerformed
-
-    private void busStopsViewMenuOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_busStopsViewMenuOptionActionPerformed
-        // TODO add your handling code here:
-        simPanel.drawStops = !simPanel.drawStops;
-    }//GEN-LAST:event_busStopsViewMenuOptionActionPerformed
-
-    private void Tram_StopsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Tram_StopsActionPerformed
-        // TODO add your handling code here:
-        simPanel.drawTram_Stops = !simPanel.drawTram_Stops;
-    }//GEN-LAST:event_Tram_StopsActionPerformed
-
-    private void actorsLabelViewMenuOption1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorsLabelViewMenuOption1ActionPerformed
-        // TODO add your handling code here:
-       simPanel.drawActorsLabel= !simPanel.drawActorsLabel;
-    }//GEN-LAST:event_actorsLabelViewMenuOption1ActionPerformed
-
-    private void actorType5CheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_actorType5CheckBoxActionPerformed
-        // TODO add your handling code here:
-        busVisible= actorType5CheckBox.isSelected();
-    }//GEN-LAST:event_actorType5CheckBoxActionPerformed
-
     /**
      * @param args the command line arguments
      */
@@ -769,7 +702,7 @@ public class SimScope extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          * ajcmoreira: changed to Metal.
          */
         try {
@@ -784,7 +717,7 @@ public class SimScope extends javax.swing.JFrame {
         }
         //</editor-fold>
         //</editor-fold>
-        
+
         //</editor-fold>
 
         /* Create and display the form */
@@ -795,7 +728,7 @@ public class SimScope extends javax.swing.JFrame {
             }
         });
     }
-    
+
     /**
      * This method reconfigures the GUI from the initial mode ("Welcome") to the modes "Realtime" or "PlayBack", and starts the corresponding mode.
      * @param mode The mode to which the GUI should be reconfigured and started.
@@ -813,7 +746,6 @@ public class SimScope extends javax.swing.JFrame {
                 generalControlPanel.setVisible(false);
                 break;
             case "realtime":
-                
                 //starts the realtime mode by reconfiguring the GUI
                 realtimeFileMenuOption.setEnabled(false); //disable this mode to prevent starting it again
                 playbackFileMenuOption.setEnabled(true); //enable playback mode
@@ -831,7 +763,6 @@ public class SimScope extends javax.swing.JFrame {
                 initActorsInfo(); //hide all the information about the number of actors
                 //start the party!
                 writeMessage("Starting Realtime mode...\n");
-                
                 // stop the ReportingPlayer, if it exists, and clear the SimStatus
                 if(reportingPlayer != null)
                     reportingPlayer.stopPlaying();
@@ -841,22 +772,15 @@ public class SimScope extends javax.swing.JFrame {
                 writeMessage("1. Connecting to the GlobalCoordinator...\n");
                 tcpLink = new TCPClient(globalCoordinatorIPaddress, globalCoordinatorPort, "visualization");
                 writeMessage("2. Getting the maps...");
-                tcpLink.start();
-                try {
-                    tcpLink.join();
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(SimScope.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                if(tcpLink.mapsReceived) {
+                boolean mapsReceived = tcpLink.requestMaps();
+                if(mapsReceived) {
                     writeMessage(" done.\n");
                     simPanel.initSimPanel(); //compute the limits of the maps, and sets the scale factors
-                    //create and start a MulticastStatusReceiver, or resume its operation if paused
+                    //create and start a MulticastReceiver, or resume its operation if paused
                     if(multicastReceiver == null) {
                         writeMessage("3. Starting to monitor the ongoing simulation...\n");
-                        multicastReceiver = new MulticastStatusReceiver(multicastAddress, multicastPort);
-                        System.out.println("antes do start");
+                        multicastReceiver = new MulticastReceiver(multicastAddress, multicastPort);
                         multicastReceiver.start();
-                        System.out.println("depois do start");
                     }
                     else {
                         writeMessage("3. Re-starting to monitor the ongoing simulation...\n");
@@ -884,7 +808,7 @@ public class SimScope extends javax.swing.JFrame {
                 initActorsInfo(); //hide all the information about the number of actors
                 //start the party!
                 writeMessage("Starting Playback mode...\n");
-                //pause the MulticastStatusReceiver, if it exists, and clear the SimStatus
+                //pause the MulticastReceiver, if it exists, and clear the SimStatus
                 if(multicastReceiver != null)
                     multicastReceiver.pauseReception();
                 SimStatus.clear();
@@ -936,7 +860,7 @@ public class SimScope extends javax.swing.JFrame {
                 break;
         }
     }
-    
+
     /**
      * Updates all the components in the GUI, including the simPanel.
      */
@@ -946,7 +870,7 @@ public class SimScope extends javax.swing.JFrame {
         //repaint the simPanel
         simPanel.repaint();
     }
-    
+
     /**
      * Initializes the GUI components responsible to show the number of actors of each type (Cars, Pedestrians, etc.).
      * Initially, all these components are hidden; they are then turned visible as the number of actors of a
@@ -974,7 +898,7 @@ public class SimScope extends javax.swing.JFrame {
         actorType10CheckBox.setVisible(false);
         actorsType10Number.setVisible(false);
     }
-    
+
     /**
      * Update the value and visibility of the GUI components responsible to show the number of actors of each type (Cars, Pedestrians, etc.).
      */
@@ -1010,45 +934,10 @@ public class SimScope extends javax.swing.JFrame {
                 actorType3CheckBox.setVisible(false);
                 actorsType3Number.setVisible(false);
             }
-            //bus
-            if(simPanel.numberOfBus > 0) // condições verdadeiras
-            {
-                //texto de checkbox
-                actorType5CheckBox.setText("Bus");
-                //visibilidade da checkbx
-                actorType5CheckBox.setVisible(true);
-                //info labels
-                actorsType5Number.setText(Integer.toString(simPanel.numberOfBus));
-                actorsType5Number.setVisible(true);
-            }  
-            else //condições falsas
-            {
-                actorType5CheckBox.setVisible(false);
-                actorsType5Number.setVisible(false);
-            }
-            /*
-            //Traffic ligh
-            if(simPanel.numberOfTL > 0) // condições verdadeiras
-            {
-                //texto de checkbox
-                actorType6CheckBox.setText("TL");
-                //visibilidade da checkbx
-                actorType6CheckBox.setVisible(true);
-                //info labels
-                actorsType6Number.setText(Integer.toString(simPanel.numberOfTL));
-                actorsType6Number.setVisible(true);
-            }  
-            else //condições falsas
-            {
-                actorType6CheckBox.setVisible(false);
-                actorsType6Number.setVisible(false);
-            }*/
-            
-            
-            if ((simPanel.numberOfActors - simPanel.numberOfCars - simPanel.numberOfPedestrians - simPanel.numberOfTrams - simPanel.numberOfBus) > 0) {
-                actorType4CheckBox.setText("TL");
+            if ((simPanel.numberOfActors - simPanel.numberOfCars - simPanel.numberOfPedestrians - simPanel.numberOfTrams) > 0) {
+                actorType4CheckBox.setText("Other");
                 actorType4CheckBox.setVisible(true);
-                actorsType4Number.setText(Integer.toString(simPanel.numberOfActors - simPanel.numberOfCars - simPanel.numberOfPedestrians - simPanel.numberOfTrams - simPanel.numberOfBus));
+                actorsType4Number.setText(Integer.toString(simPanel.numberOfActors - simPanel.numberOfCars - simPanel.numberOfPedestrians - simPanel.numberOfTrams));
                 actorsType4Number.setVisible(true);
             }
             else {
@@ -1057,7 +946,7 @@ public class SimScope extends javax.swing.JFrame {
             }
         }
     }
-    
+
     /**
      * This method prompts the user to select a file to be open.
      * @return The name of the selected file.
@@ -1076,16 +965,16 @@ System.out.println("You canceled the file selection!");
             return null;
         }
     }
-    
+
     /**
      * Write (append) a message to the messageArea component.
-     * @param message 
+     * @param message
      */
     private void writeMessage(String message) {
         messageArea.append(message);
     }
-    
-    
+
+
     /**
      * Pops up a message box.
      * @param message
@@ -1095,10 +984,9 @@ System.out.println("You canceled the file selection!");
     {
         JOptionPane.showMessageDialog(this, message, titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar MenuBar;
-    private javax.swing.JMenuItem Tram_Stops;
     private javax.swing.JMenuItem aboutHelpMenuOption;
     private static javax.swing.JCheckBox actorType10CheckBox;
     private static javax.swing.JCheckBox actorType1CheckBox;
@@ -1110,9 +998,8 @@ System.out.println("You canceled the file selection!");
     private static javax.swing.JCheckBox actorType7CheckBox;
     private static javax.swing.JCheckBox actorType8CheckBox;
     private static javax.swing.JCheckBox actorType9CheckBox;
-    private javax.swing.JMenuItem actorsIdViewMenuOption;
     private javax.swing.JPanel actorsInfoPanel;
-    private javax.swing.JMenuItem actorsLabelViewMenuOption1;
+    private javax.swing.JMenuItem actorsInfoViewMenuOption;
     private static javax.swing.JLabel actorsType10Number;
     private static javax.swing.JLabel actorsType1Number;
     private static javax.swing.JLabel actorsType2Number;
@@ -1123,7 +1010,6 @@ System.out.println("You canceled the file selection!");
     private static javax.swing.JLabel actorsType7Number;
     private static javax.swing.JLabel actorsType8Number;
     private static javax.swing.JLabel actorsType9Number;
-    private javax.swing.JMenuItem busStopsViewMenuOption;
     private javax.swing.JMenuItem cursorCoordsViewMenuOption;
     private javax.swing.JMenuItem exitFileMenuOption;
     private javax.swing.JMenu fileMenu;
